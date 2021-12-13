@@ -22,17 +22,28 @@ provider:
 
 functions:
   app-load:
-    handler: lambdas/endpoints/app-load.handler
+    handler: lambdas/endpoints/general/app-load.handler
     events:
       - http:
           path: /
           method: GET
           cors: true
   connect:
-    handler: lambdas/websocket/connect.handler
+    handler: lambdas/endpoints/websocket/connect.handler
     events:
       - websocket:
           route: $connect
+  disconnect:
+    handler: lambdas/endpoints/websocket/disconnect.handler
+    events:
+      - websocket:
+          route: $disconnect
+  friend-request:
+    handler: lambdas/endpoints/profile/friend-request.handler
+    events:
+      - websocket:
+        route: friendRequest
+        routeResponseSelectionExpression: $default
 #    Define function environment variables here
 #    environment:
 #      variable2: value2
