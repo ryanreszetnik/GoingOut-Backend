@@ -12,6 +12,5 @@ const getSingleItem = async (table, field, value) => {
 
 const get = async (tableName = "", keyFieldName = "", params = null) => {
   return await getSingleItem(tableName, keyFieldName, params);
-  //   return { other: "good" };
 };
 exports.get = get;

@@ -42,8 +42,8 @@ functions:
     handler: lambdas/endpoints/profile/friend-request.handler
     events:
       - websocket:
-        route: friendRequest
-        routeResponseSelectionExpression: $default
+          route: friendRequest
+          routeResponseSelectionExpression: $default
 #    Define function environment variables here
 #    environment:
 #      variable2: value2
