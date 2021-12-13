@@ -8,5 +8,6 @@
     "deploy": "serverless deploy"
   },
   "author": "Ryan Reszetnik",
-  "license": "ISC"
+  "license": "ISC",
+  "dependencies": {}
 }

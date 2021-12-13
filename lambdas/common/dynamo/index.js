@@ -6,22 +6,23 @@ const PUT = require("./put");
 const UPDATE = require("./update");
 
 const Responses = {
-  async get(tableName = "", keyFieldName = "", params = null) {
-    return await GET.get(tableName, keyFieldName, params);
+  async get(table = "", key = "", query = false) {
+    return await GET.get(table, key, query);
   },
-  async delete(tableName = "", keyFieldName = "", params = null) {
-    return await DELETE.delete(tableName, keyFieldName, params);
+  async delete(table = "", key = "", all = false) {
+    return await DELETE.delete(table, key, all);
   },
-  async list_add(table = "", key = { id: "" }, field = "", values = []) {
-    return await LIST_ADD.list_add(table, key, field, values);
+  async list_add(table = "", keys = [{ id: "" }], field = "", values = []) {
+    return await LIST_ADD.list_add(table, keys, field, values);
   },
-  async list_remove(table = "", key = { id: "" }, field = "", values = []) {
-    return await LIST_REMOVE.list_remove(table, key, field, values);
+  async list_remove(table = "", keys = [{ id: "" }], field = "", values = []) {
+    return await LIST_REMOVE.list_remove(table, keys, field, values);
   },
   async put(table = "", value) {
     return await PUT.put(table, value);
   },
-  async update(table = "", key = { id: "" }, obj = {}) {
+  async update(table = "", keyFieldName = "", obj = {}) {
+    //obj could also be [{}]
     return await UPDATE.update(table, key, obj);
   },
 };
