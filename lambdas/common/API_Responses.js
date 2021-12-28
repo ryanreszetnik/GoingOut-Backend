@@ -1,4 +1,7 @@
 const Responses = {
+  _200_socket(action, body) {
+    return this._200({ action: action, body: body });
+  },
   _200(data = {}) {
     return {
       headers: {

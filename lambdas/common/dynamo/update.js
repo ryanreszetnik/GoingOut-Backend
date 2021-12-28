@@ -40,21 +40,18 @@ const getGeneralParams = (tableName, keyFieldName, obj) => {
 };
 
 const update = async (table, keyFieldName, obj) => {
-  if (Array.isArray(obj)) {
-    const retObjs = [];
-    await Promise.all(
-      obj.map(async (id) => {
-        const params = getGeneralParams(table, keyFieldName, id);
-        retObjs.push(
-          (await documentClient.update(params).promise()).Attributes
-        );
-      })
-    );
-    return retObjs;
-  } else {
-    const params = getGeneralParams(table, keyFieldName, obj);
-    return (await documentClient.update(params).promise()).Attributes;
-  }
+  const params = getGeneralParams(table, keyFieldName, obj);
+  return (await documentClient.update(params).promise()).Attributes;
 };
-
-exports.update = update;
+const updateAll = async (table, keyFieldName, objs) => {
+  const retObjs = [];
+  await Promise.all(
+    objs.map(async (id) => {
+      const params = getGeneralParams(table, keyFieldName, id);
+      retObjs.push((await documentClient.update(params).promise()).Attributes);
+    })
+  );
+  return retObjs;
+};
+exports.updateAll = updateAll;
+exports.updateSingle = update;

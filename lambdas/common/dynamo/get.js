@@ -33,7 +33,9 @@ const getBatchItems = async (table, keys) => {
   );
   return returnValues;
 };
-const queryItems = async (table, field, value) => {
+const queryItems = async (table, key) => {
+  const field = Object.keys(key)[0];
+  const value = key[field];
   var params = {
     ExpressionAttributeValues: {
       ":v1": value,
@@ -44,14 +46,6 @@ const queryItems = async (table, field, value) => {
   return (await documentClient.query(params).promise()).Items;
 };
 
-const get = async (tableName, key, query = false) => {
-  if (query) {
-    const name = Object.keys(key)[0];
-    return await queryItems(tableName, name, key[name]);
-  } else if (Array.isArray(key)) {
-    return await getBatchItems(tableName, key);
-  } else {
-    return await getSingleItem(tableName, key);
-  }
-};
-exports.get = get;
+exports.get = getSingleItem;
+exports.query = queryItems;
+exports.getAll = getBatchItems;

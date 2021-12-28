@@ -39,12 +39,5 @@ const updateList = async (table, list) => {
   return returnValues;
 };
 
-const put = (table = "", value) => {
-  if (Array.isArray(value)) {
-    return await updateList(table, value);
-  } else {
-    return await updateItem(table, value);
-  }
-};
-
-exports.put = put;
+exports.putSingle = updateItem;
+exports.putMultiple = updateList;

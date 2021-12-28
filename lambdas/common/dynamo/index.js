@@ -6,24 +6,46 @@ const PUT = require("./put");
 const UPDATE = require("./update");
 
 const Responses = {
-  async get(table = "", key = "", query = false) {
-    return await GET.get(table, key, query);
+  //get
+  async get(table = "", key = {}) {
+    return await GET.get(table, key);
   },
-  async delete(table = "", key = "", all = false) {
-    return await DELETE.delete(table, key, all);
+  async getMultiple(table = "", key = {}) {
+    return await GET.getAll(table, key);
   },
+  async query(table = "", key = {}) {
+    return await GET.query(table, key);
+  },
+  //delete
+  async delete(table = "", key = "") {
+    return await DELETE.deleteSingle(table, key);
+  },
+  async deleteMultiple(table = "", key = "") {
+    return await DELETE.deleteMutliple(table, key);
+  },
+  async deleteAll(table = "", key = "") {
+    return await DELETE.deleteAll(table, key);
+  },
+  //lists
   async list_add(table = "", keys = [{ id: "" }], field = "", values = []) {
     return await LIST_ADD.list_add(table, keys, field, values);
   },
   async list_remove(table = "", keys = [{ id: "" }], field = "", values = []) {
     return await LIST_REMOVE.list_remove(table, keys, field, values);
   },
-  async put(table = "", value) {
-    return await PUT.put(table, value);
+  //put
+  async put(table = "", value = {}) {
+    return await PUT.putSingle(table, value);
   },
-  async update(table = "", keyFieldName = "", obj = {}) {
-    //obj could also be [{}]
-    return await UPDATE.update(table, key, obj);
+  async putAll(table = "", values = [{}]) {
+    return await PUT.putMultiple(table, values);
+  },
+  //update
+  async update(table = "", keyName = "", obj = {}) {
+    return await UPDATE.updateSingle(table, keyName, obj);
+  },
+  async updateAll(table = "", keyName = "", objs = [{}]) {
+    return await UPDATE.updateAll(table, keyName, objs);
   },
 };
 

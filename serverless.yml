@@ -1,21 +1,34 @@
 service: going-out-backend
-# app and org for use with dashboard.serverless.com
-#app: your-app-name
-#org: your-org-name
 
-# You can pin your service to only deploy with a specific Serverless version
-# Check out our docs for more details
 frameworkVersion: "2"
 
 provider:
   name: aws
   runtime: nodejs12.x
+  environment:
+    DOMAIN_SUFFIX: going-out
   lambdaHashingVersion: 20201221
   profile: serverlessUser
   stage: dev
   region: ca-central-1
   httpApi:
     cors: true
+    authorizers:
+      serviceAuthorizer:
+        type: jwt
+        identitySource: $request.header.Authorization
+        # issuerUrl: https://cognito-idp.${region}.amazonaws.com/${cognitoPoolId}
+        # # identitySource: $request.header.Authorization
+        issuerUrl:
+          Fn::Join:
+            - ""
+            - - "https://cognito-idp."
+              - "${opt:region, self:provider.region}"
+              - ".amazonaws.com/"
+              - Ref: serviceUserPool
+        audience:
+          - Ref: serviceUserPoolClient
+
   iamRoleStatements:
     - Effect: Allow
       Action:
@@ -23,12 +36,140 @@ provider:
       Resource: "*"
 
 functions:
+  add-event-member:
+    handler: lambdas/endpoints/events/socket-add-event-member.handler
+    events:
+      - websocket:
+          route: addEventMembers
+          routeResponseSelectionExpression: $default
+  create-event:
+    handler: lambdas/endpoints/events/socket-create-event.handler
+    events:
+      - websocket:
+          route: createEvent
+          routeResponseSelectionExpression: $default
+  edit-event:
+    handler: lambdas/endpoints/events/socket-edit-event.handler
+    events:
+      - websocket:
+          route: editEvent
+          routeResponseSelectionExpression: $default
+  leave-event:
+    handler: lambdas/endpoints/events/socket-leave-event.handler
+    events:
+      - websocket:
+          route: leaveEvent
+          routeResponseSelectionExpression: $default
   app-load:
-    handler: lambdas/endpoints/general/app-load.handler
+    handler: lambdas/endpoints/general/http-app-load.handler
     events:
       - http:
           path: /
           method: GET
+          authorizer: serviceAuthorizer
+  get-nearby-locations:
+    handler: lambdas/endpoints/general/http-get-nearby-locations.handler
+    events:
+      - http:
+          path: /locations
+          method: GET
+          authorizer: serviceAuthorizer
+  load-users:
+    handler: lambdas/endpoints/general/http-load-users.handler
+    events:
+      - http:
+          path: /loadprofiles
+          method: GET
+          authorizer: serviceAuthorizer
+  search-users:
+    handler: lambdas/endpoints/general/http-search-users.handler
+    events:
+      - http:
+          path: /searchusers
+          method: GET
+          authorizer: serviceAuthorizer
+  send-message:
+    handler: lambdas/endpoints/general/socket-send-message.handler
+    events:
+      - websocket:
+          route: sendMessage
+          routeResponseSelectionExpression: $default
+  add-group-member:
+    handler: lambdas/endpoints/groups/socket-add-group-member.handler
+    events:
+      - websocket:
+          route: addGroupMembers
+          routeResponseSelectionExpression: $default
+  create-group:
+    handler: lambdas/endpoints/groups/socket-create-group.handler
+    events:
+      - websocket:
+          route: createGroup
+          routeResponseSelectionExpression: $default
+  edit-group:
+    handler: lambdas/endpoints/groups/socket-edit-group.handler
+    events:
+      - websocket:
+          route: editGroup
+          routeResponseSelectionExpression: $default
+  leave-group:
+    handler: lambdas/endpoints/groups/socket-leave-group.handler
+    events:
+      - websocket:
+          route: leaveGroup
+          routeResponseSelectionExpression: $default
+  search-matches:
+    handler: lambdas/endpoints/matches/http-search-matches.handler
+    events:
+      - http:
+          path: /searchevents
+          method: GET
+          authorizer: serviceAuthorizer
+  create-match:
+    handler: lambdas/endpoints/matches/socket-create-match.handler
+    events:
+      - websocket:
+          route: createMatch
+          routeResponseSelectionExpression: $default
+  merge:
+    handler: lambdas/endpoints/matches/socket-merge.handler
+    events:
+      - websocket:
+          route: merge
+          routeResponseSelectionExpression: $default
+  delete-user:
+    handler: lambdas/endpoints/profile/http-delete-user.handler
+    events:
+      - http:
+          path: /deleteAccount
+          method: DELETE
+          authorizer: serviceAuthorizer
+  get-friends:
+    handler: lambdas/endpoints/profile/http-get-friends.handler
+    events:
+      - http:
+          path: /friends
+          method: GET
+          authorizer: serviceAuthorizer
+  register-account:
+    handler: lambdas/endpoints/profile/http-register-account.handler
+    events:
+      - cognitoUserPool:
+          pool: serviceUserPool
+          trigger: PostConfirmation
+  update-user:
+    handler: lambdas/endpoints/profile/http-update-user.handler
+    events:
+      - http:
+          path: /profile
+          method: POST
+          authorizer: serviceAuthorizer
+  friend-request:
+    handler: lambdas/endpoints/profile/socket-friend-request.handler
+    events:
+      - websocket:
+          route: friendRequest
+          routeResponseSelectionExpression: $default
   connect:
     handler: lambdas/endpoints/websocket/connect.handler
     events:
@@ -39,25 +180,41 @@ functions:
     events:
       - websocket:
           route: $disconnect
-  friend-request:
-    handler: lambdas/endpoints/profile/friend-request.handler
-    events:
-      - websocket:
-          route: friendRequest
-          routeResponseSelectionExpression: $default
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
 
-# you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"
-
+resources:
+  Resources:
+    serviceUserPool:
+      Type: AWS::Cognito::UserPool
+      Properties:
+        UserPoolName: service-user-pool-${opt:stage, self:provider.stage}
+        UsernameAttributes:
+          - email
+        AutoVerifiedAttributes:
+          - email
+    serviceUserPoolClient:
+      Type: AWS::Cognito::UserPoolClient
+      Properties:
+        ClientName: service-user-pool-client-${opt:stage, self:provider.stage}
+        AllowedOAuthFlows:
+          - implicit
+        AllowedOAuthFlowsUserPoolClient: true
+        AllowedOAuthScopes:
+          - phone
+          - email
+          - openid
+          - profile
+          - aws.cognito.signin.user.admin
+        UserPoolId:
+          Ref: serviceUserPool
+        ExplicitAuthFlows:
+          - ALLOW_USER_SRP_AUTH
+          - ALLOW_REFRESH_TOKEN_AUTH
+        GenerateSecret: false
+        SupportedIdentityProviders:
+          - COGNITO
+    serviceUserPoolDomain:
+      Type: AWS::Cognito::UserPoolDomain
+      Properties:
+        UserPoolId:
+          Ref: serviceUserPool
+        Domain: service-user-pool-domain-${opt:stage, self:provider.stage}-${self:provider.environment.DOMAIN_SUFFIX}
